@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import asyncio
 
 # Replace this with your own bot token from BotFather
 BOT_TOKEN = "BOT_TOKEN"
@@ -65,5 +66,10 @@ async def main():
 
 # Run the bot
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    try:
+        asyncio.get_event_loop().run_until_complete(main())
+    except RuntimeError as e:
+        # fallback for already running loop (like in Railway)
+        loop = asyncio.get_event_loop()
+        loop.create_task(main())
+        loop.run_forever()
