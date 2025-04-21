@@ -6,9 +6,16 @@ import os
 import math
 from collections import defaultdict
 import logging
-import pidfile
 import sys
 import signal
+
+# Try to import pidfile, fallback if not available
+try:
+    from pidfile import PidFile, PidFileAlreadyRunningError
+except ImportError:
+    PidFile = None
+    PidFileAlreadyRunningError = None
+    print("Warning: pidfile module not found. Multiple instances may run concurrently.")
 
 # Configure logging
 logging.basicConfig(
@@ -194,35 +201,39 @@ def main():
         return
 
     # Check for existing instance using PID file
-    try:
-        with pidfile.PIDFile(PID_FILE):
-            app = ApplicationBuilder().token(BOT_TOKEN).build()
+    if PidFile is None:
+        logger.warning("pidfile module not available, proceeding without instance checking")
+        app = ApplicationBuilder().token(BOT_TOKEN).build()
+    else:
+        try:
+            with PidFile(PID_FILE):
+                app = ApplicationBuilder().token(BOT_TOKEN).build()
+        except PidFileAlreadyRunningError:
+            logger.error("Another instance of MathMasterBot is already running. Exiting...")
+            sys.exit(1)
 
-            # Register signal handlers for graceful shutdown
-            signal.signal(signal.SIGINT, lambda s, f: handle_shutdown(s, f, app))
-            signal.signal(signal.SIGTERM, lambda s, f: handle_shutdown(s, f, app))
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, lambda s, f: handle_shutdown(s, f, app))
+    signal.signal(signal.SIGTERM, lambda s, f: handle_shutdown(s, f, app))
 
-            # Add command handlers
-            app.add_handler(CommandHandler("start", start))
-            app.add_handler(CommandHandler("help", help_command))
-            app.add_handler(CommandHandler("add", add))
-            app.add_handler(CommandHandler("subtract", subtract))
-            app.add_handler(CommandHandler("multiply", multiply))
-            app.add_handler(CommandHandler("divide", divide))
-            app.add_handler(CommandHandler("square", square))
-            app.add_handler(CommandHandler("sin", sin))
-            app.add_handler(CommandHandler("cos", cos))
-            app.add_handler(CommandHandler("tan", tan))
-            app.add_handler(CommandHandler("stats", stats))
+    # Add command handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("add", add))
+    app.add_handler(CommandHandler("subtract", subtract))
+    app.add_handler(CommandHandler("multiply", multiply))
+    app.add_handler(CommandHandler("divide", divide))
+    app.add_handler(CommandHandler("square", square))
+    app.add_handler(CommandHandler("sin", sin))
+    app.add_handler(CommandHandler("cos", cos))
+    app.add_handler(CommandHandler("tan", tan))
+    app.add_handler(CommandHandler("stats", stats))
 
-            # Add error handler
-            app.add_error_handler(error_handler)
+    # Add error handler
+    app.add_error_handler(error_handler)
 
-            logger.info("MathMasterBot is running...")
-            app.run_polling()
-    except pidfile.AlreadyRunningError:
-        logger.error("Another instance of MathMasterBot is already running. Exiting...")
-        sys.exit(1)
+    logger.info("MathMasterBot is running...")
+    app.run_polling()
 
 # Run the bot
 if __name__ == "__main__":
