@@ -1,15 +1,30 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Application
+from telegram.error import Conflict, TelegramError
 import asyncio
 import os
 import math
 from collections import defaultdict
+import logging
+import pidfile
+import sys
+import signal
+
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Replace this with your own bot token from BotFather
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Store command usage statistics
 command_stats = defaultdict(int)
+
+# PID file path
+PID_FILE = "math_bot.pid"
 
 # Helper function to validate arguments
 def validate_args(args, expected_count):
@@ -20,6 +35,19 @@ def validate_args(args, expected_count):
         return True, numbers
     except ValueError:
         return False, "Please provide valid numbers"
+
+# Error handler
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.error(f"Update {update} caused error: {context.error}")
+    if isinstance(context.error, Conflict):
+        logger.error("Conflict error: Another bot instance is running. Terminating...")
+        if update:
+            await update.message.reply_text(
+                "Error: Bot conflict detected. Please ensure only one instance is running."
+            )
+        sys.exit(1)
+    elif update:
+        await update.message.reply_text("An error occurred. Please try again later.")
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -150,29 +178,51 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         stats_message += f"/{cmd}: {count} times\n"
     await update.message.reply_text(stats_message)
 
+# Signal handler for graceful shutdown
+def handle_shutdown(signum, frame, application: Application):
+    logger.info("Received shutdown signal, stopping bot...")
+    asyncio.create_task(application.stop())
+    asyncio.create_task(application.shutdown())
+    if os.path.exists(PID_FILE):
+        os.remove(PID_FILE)
+    sys.exit(0)
+
 # Main function to run the bot
 def main():
     if not BOT_TOKEN:
-        print("Error: BOT_TOKEN not set")
+        logger.error("BOT_TOKEN not set")
         return
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    # Check for existing instance using PID file
+    try:
+        with pidfile.PIDFile(PID_FILE):
+            app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Add command handlers
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("add", add))
-    app.add_handler(CommandHandler("subtract", subtract))
-    app.add_handler(CommandHandler("multiply", multiply))
-    app.add_handler(CommandHandler("divide", divide))
-    app.add_handler(CommandHandler("square", square))
-    app.add_handler(CommandHandler("sin", sin))
-    app.add_handler(CommandHandler("cos", cos))
-    app.add_handler(CommandHandler("tan", tan))
-    app.add_handler(CommandHandler("stats", stats))
+            # Register signal handlers for graceful shutdown
+            signal.signal(signal.SIGINT, lambda s, f: handle_shutdown(s, f, app))
+            signal.signal(signal.SIGTERM, lambda s, f: handle_shutdown(s, f, app))
 
-    print("MathMasterBot is running...")
-    app.run_polling()
+            # Add command handlers
+            app.add_handler(CommandHandler("start", start))
+            app.add_handler(CommandHandler("help", help_command))
+            app.add_handler(CommandHandler("add", add))
+            app.add_handler(CommandHandler("subtract", subtract))
+            app.add_handler(CommandHandler("multiply", multiply))
+            app.add_handler(CommandHandler("divide", divide))
+            app.add_handler(CommandHandler("square", square))
+            app.add_handler(CommandHandler("sin", sin))
+            app.add_handler(CommandHandler("cos", cos))
+            app.add_handler(CommandHandler("tan", tan))
+            app.add_handler(CommandHandler("stats", stats))
+
+            # Add error handler
+            app.add_error_handler(error_handler)
+
+            logger.info("MathMasterBot is running...")
+            app.run_polling()
+    except pidfile.AlreadyRunningError:
+        logger.error("Another instance of MathMasterBot is already running. Exiting...")
+        sys.exit(1)
 
 # Run the bot
 if __name__ == "__main__":
