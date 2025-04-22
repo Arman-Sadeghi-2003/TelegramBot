@@ -1,12 +1,13 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import MessageHandler, filters
 import asyncio
 import os
 import math
 from collections import defaultdict
 
 # Replace this with your own bot token from BotFather
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = "5852570015:AAGllkE4eGcHkMLaq7Ix9IKF9Z7VHv6EFns"
 
 # Store command usage statistics
 command_stats = defaultdict(int)
@@ -24,8 +25,9 @@ def validate_args(args, expected_count):
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     command_stats['start'] += 1
+    username = update.effective_user.first_name or "there"
     await update.message.reply_text(
-        "👋 Welcome to MathMasterBot! I'm your friendly math assistant.\n"
+        f"👋 Hello {username}! I'm your friendly math assistant.\n"
         "Available commands:\n"
         "/help - Show all commands\n"
         "/add x y - Add two numbers\n"
@@ -37,6 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/cos x - Calculate cosine\n"
         "/tan x - Calculate tangent"
     )
+
 
 # Help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -150,6 +153,11 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         stats_message += f"/{cmd}: {count} times\n"
     await update.message.reply_text(stats_message)
 
+
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
+
+
 # Main function to run the bot
 def main():
     if not BOT_TOKEN:
@@ -170,6 +178,7 @@ def main():
     app.add_handler(CommandHandler("cos", cos))
     app.add_handler(CommandHandler("tan", tan))
     app.add_handler(CommandHandler("stats", stats))
+    app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
 
     print("MathMasterBot is running...")
     app.run_polling()
