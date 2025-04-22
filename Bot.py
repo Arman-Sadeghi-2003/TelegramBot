@@ -7,7 +7,7 @@ import math
 from collections import defaultdict
 
 # Replace this with your own bot token from BotFather
-BOT_TOKEN = "5852570015:AAGllkE4eGcHkMLaq7Ix9IKF9Z7VHv6EFns"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Store command usage statistics
 command_stats = defaultdict(int)
