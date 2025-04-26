@@ -37,7 +37,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/square x - Square a number\n"
         "/sin x - Calculate sine\n"
         "/cos x - Calculate cosine\n"
+        "/sqrt x - Square root\n"
         "/tan x - Calculate tangent"
+        "/pow x y - x raised to the power y\n"
+        "/log x - Natural logarithm (ln)\n"
+        "/abs x - Absolute value\n"
+        "/round x - Round to nearest integer\n"
     )
 
 
@@ -55,6 +60,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/sin x - Calculate sine (in radians)\n"
         "/cos x - Calculate cosine (in radians)\n"
         "/tan x - Calculate tangent (in radians)\n"
+        "/sqrt x - Square root\n"
+        "/pow x y - x raised to the power y\n"
+        "/log x - Natural logarithm (ln)\n"
+        "/abs x - Absolute value\n"
+        "/round x - Round to nearest integer\n"
         "/stats - Show command usage statistics"
     )
 
@@ -145,6 +155,62 @@ async def tan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except ValueError:
         await update.message.reply_text("Error: Invalid input for tangent")
 
+# Square root command
+async def sqrt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['sqrt'] += 1
+    is_valid, result = validate_args(context.args, 1)
+    if not is_valid:
+        await update.message.reply_text(f"Error: {result}\nUsage: /sqrt 16")
+        return
+    x = result[0]
+    if x < 0:
+        await update.message.reply_text("Cannot take square root of a negative number.")
+    else:
+        await update.message.reply_text(f"√{x} = {math.sqrt(x):.6f}")
+
+# Power command
+async def pow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['pow'] += 1
+    is_valid, result = validate_args(context.args, 2)
+    if not is_valid:
+        await update.message.reply_text(f"Error: {result}\nUsage: /pow 2 3")
+        return
+    x, y = result
+    await update.message.reply_text(f"{x} ^ {y} = {math.pow(x, y):.6f}")
+
+# Logarithm command
+async def log(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['log'] += 1
+    is_valid, result = validate_args(context.args, 1)
+    if not is_valid:
+        await update.message.reply_text(f"Error: {result}\nUsage: /log 2.718")
+        return
+    x = result[0]
+    if x <= 0:
+        await update.message.reply_text("Cannot take log of non-positive number.")
+    else:
+        await update.message.reply_text(f"ln({x}) = {math.log(x):.6f}")
+
+# Absolute value command
+async def abs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['abs'] += 1
+    is_valid, result = validate_args(context.args, 1)
+    if not is_valid:
+        await update.message.reply_text(f"Error: {result}\nUsage: /abs -5")
+        return
+    x = result[0]
+    await update.message.reply_text(f"|{x}| = {abs(x)}")
+
+# Round command
+async def round_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['round'] += 1
+    is_valid, result = validate_args(context.args, 1)
+    if not is_valid:
+        await update.message.reply_text(f"Error: {result}\nUsage: /round 2.7")
+        return
+    x = result[0]
+    await update.message.reply_text(f"round({x}) = {round(x)}")
+
 # Stats command
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     command_stats['stats'] += 1
@@ -178,6 +244,11 @@ def main():
     app.add_handler(CommandHandler("cos", cos))
     app.add_handler(CommandHandler("tan", tan))
     app.add_handler(CommandHandler("stats", stats))
+    app.add_handler(CommandHandler("sqrt", sqrt))
+    app.add_handler(CommandHandler("pow", pow_command))
+    app.add_handler(CommandHandler("log", log))
+    app.add_handler(CommandHandler("abs", abs_command))
+    app.add_handler(CommandHandler("round", round_command))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
 
     print("MathMasterBot is running...")
