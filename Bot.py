@@ -1,6 +1,6 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram.ext import MessageHandler, filters, ReplyKeyboardMarkup
+from telegram.ext import MessageHandler, filters
 import asyncio
 import os
 import math
