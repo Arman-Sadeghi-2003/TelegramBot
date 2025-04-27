@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram.ext import MessageHandler, filters
+from telegram.ext import MessageHandler, filters, ReplyKeyboardMarkup
 import asyncio
 import os
 import math
@@ -11,6 +11,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Store command usage statistics
 command_stats = defaultdict(int)
+FIRST_NUMBER, SECOND_NUMBER = range(2)
 
 # Helper function to validate arguments
 def validate_args(args, expected_count):
@@ -24,28 +25,25 @@ def validate_args(args, expected_count):
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        ['/help'],
+        ["/add", "/subtract"],
+        ["/multiply", "/divide"],
+        ["/sin", '/cos', '/tan'],
+        ["/square"]
+        ["/sqrt", "/pow"],
+        ["/log", "/abs", "/round"],
+        ["/stats"],
+        ["/Cancel"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     command_stats['start'] += 1
     username = update.effective_user.first_name or "there"
     await update.message.reply_text(
-        f"👋 Hello {username}! I'm your friendly math assistant.\n"
-        "Available commands:\n"
-        "/help - Show all commands\n"
-        "/add x y - Add two numbers\n"
-        "/subtract x y - Subtract two numbers\n"
-        "/multiply x y - Multiply two numbers\n"
-        "/divide x y - Divide two numbers\n"
-        "/square x - Square a number\n"
-        "/sin x - Calculate sine\n"
-        "/cos x - Calculate cosine\n"
-        "/sqrt x - Square root\n"
-        "/tan x - Calculate tangent"
-        "/pow x y - x raised to the power y\n"
-        "/log x - Natural logarithm (ln)\n"
-        "/abs x - Absolute value\n"
-        "/round x - Round to nearest integer\n"
+        f"👋 Hello {username}! I'm your friendly math assistant.\nAvailable commands:",
+        reply_markup=reply_markup
     )
-
-
+    
 # Help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     command_stats['help'] += 1
