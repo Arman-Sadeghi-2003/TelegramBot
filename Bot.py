@@ -26,15 +26,15 @@ def validate_args(args, expected_count):
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("/help", callback_data='/help')],
-        [InlineKeyboardButton("/add", callback_data='/add'), InlineKeyboardButton("/subtract", callback_data='/subtract')],
-        [InlineKeyboardButton("/multiply", callback_data='/multiply'), InlineKeyboardButton("/divide", callback_data='/divide')],
-        [InlineKeyboardButton("/sin", callback_data='/sin'), InlineKeyboardButton("/cos", callback_data='/cos'), InlineKeyboardButton("/tan", callback_data='/tan')],
-        [InlineKeyboardButton("/square", callback_data='/square')],
-        [InlineKeyboardButton("/sqrt", callback_data='/sqrt'), InlineKeyboardButton("/pow", callback_data='/pow')],
-        [InlineKeyboardButton("/log", callback_data='/log'), InlineKeyboardButton("/abs", callback_data='/abs'), InlineKeyboardButton("/round", callback_data='/round')],
-        [InlineKeyboardButton("/stats", callback_data='/stats')],
-        [InlineKeyboardButton("/Cancel", callback_data='/Cancel')]
+        [InlineKeyboardButton("/help", callback_data='help_command')],
+        [InlineKeyboardButton("/add", callback_data='add'), InlineKeyboardButton("/subtract", callback_data='subtract')],
+        [InlineKeyboardButton("/multiply", callback_data='multiply'), InlineKeyboardButton("/divide", callback_data='divide')],
+        [InlineKeyboardButton("/sin", callback_data='sin'), InlineKeyboardButton("/cos", callback_data='cos'), InlineKeyboardButton("/tan", callback_data='tan')],
+        [InlineKeyboardButton("/square", callback_data='square')],
+        [InlineKeyboardButton("/sqrt", callback_data='sqrt'), InlineKeyboardButton("/pow", callback_data='pow_command')],
+        [InlineKeyboardButton("/log", callback_data='log'), InlineKeyboardButton("/abs", callback_data='abs_command'), InlineKeyboardButton("/round", callback_data='round_command')],
+        [InlineKeyboardButton("/stats", callback_data='stats')],
+        [InlineKeyboardButton("/Cancel", callback_data='cancel')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     command_stats['start'] += 1
