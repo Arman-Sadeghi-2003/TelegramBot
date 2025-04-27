@@ -217,9 +217,43 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         stats_message += f"/{cmd}: {count} times\n"
     await update.message.reply_text(stats_message)
 
+#<--------------------------------------------------------------->
+
+async def add_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Please send the first number:")
+    return FIRST_NUMBER
+
+async def add_first_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        context.user_data['first_number'] = float(update.message.text)
+        await update.message.reply_text("Now send the second number:")
+        return SECOND_NUMBER
+    except ValueError:
+        await update.message.reply_text("Please send a valid number:")
+        return FIRST_NUMBER
+
+async def add_second_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        second_number = float(update.message.text)
+        first_number = context.user_data.get('first_number')
+        result = first_number + second_number
+        await update.message.reply_text(f"{first_number} + {second_number} = {result}")
+    except ValueError:
+        await update.message.reply_text("Please send a valid number:")
+        return SECOND_NUMBER
+
+    return ConversationHandler.END
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('❌ Operation cancelled.')
+    return ConversationHandler.END
+
+#<--------------------------------------------------------------->
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
+
+
 
 # Callback query handler for inline buttons
 async def callback_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
