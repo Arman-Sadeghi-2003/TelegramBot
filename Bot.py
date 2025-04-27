@@ -247,7 +247,10 @@ def main():
     app.add_handler(CommandHandler("log", log))
     app.add_handler(CommandHandler("abs", abs_command))
     app.add_handler(CommandHandler("round", round_command))
+    app.add_handler(CallbackQueryHandler(callback_query_handler))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+
+    
 
     print("MathMasterBot is running...")
     app.run_polling()
