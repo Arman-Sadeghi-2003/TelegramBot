@@ -1,5 +1,5 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
 from telegram.ext import MessageHandler, filters
 import asyncio
 import os
@@ -221,6 +221,37 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
 
+# Callback query handler for inline buttons
+async def callback_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    callback_data = query.data
+
+    # Map callback_data to the corresponding command function
+    callback_map = {
+        'help_command': help_command,
+        'add': add,
+        'subtract': subtract,
+        'multiply': multiply,
+        'divide': divide,
+        'sin': sin,
+        'cos': cos,
+        'tan': tan,
+        'square': square,
+        'sqrt': sqrt,
+        'pow_command': pow_command,
+        'log': log,
+        'abs_command': abs_command,
+        'round_command': round_command,
+        'stats': stats,
+        'cancel': cancel
+    }
+
+    if callback_data in callback_map:
+        # Call the corresponding command function
+        await callback_map[callback_data](update, context)
+    else:
+        await query.message.reply_text("Unknown action.")
+        query.answer()
 
 # Main function to run the bot
 def main():
