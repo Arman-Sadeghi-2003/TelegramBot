@@ -1,3 +1,7 @@
+import asyncio
+import os
+import math
+from collections import defaultdict
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -8,10 +12,6 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
-import asyncio
-import os
-import math
-from collections import defaultdict
 
 # Replace this with your own bot token from BotFather
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -38,17 +38,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     command_stats['start'] += 1
     username = update.effective_user.first_name or "there"
+    message = f"👋 Hello {username}! I'm your friendly math assistant.\nAvailable commands:"
     if update.callback_query:
-        await update.callback_query.message.reply_text(
-            f"👋 Hello {username}! I'm your friendly math assistant.\nAvailable commands:",
-            reply_markup=reply_markup
-        )
+        await update.callback_query.message.reply_text(message, reply_markup=reply_markup)
         await update.callback_query.answer()
     else:
-        await update.message.reply_text(
-            f"👋 Hello {username}! I'm your friendly math assistant.\nAvailable commands:",
-            reply_markup=reply_markup
-        )
+        await update.message.reply_text(message, reply_markup=reply_markup)
 
 # Help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -93,68 +88,75 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Cancel command
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     command_stats['cancel'] += 1
+    cancellation_message = "Operation canceled."
     if update.callback_query:
-        await update.callback_query.message.reply_text("Operation canceled.")
+        await update.callback_query.message.reply_text(cancellation_message)
         await update.callback_query.answer()
     else:
-        await update.message.reply_text("Operation canceled.")
+        await update.message.reply_text(cancellation_message)
     return ConversationHandler.END
 
-# Conversation handler for commands requiring one number
+# Generic function to handle one number operations
 async def one_number_entry(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str):
     command_stats[command] += 1
     context.user_data['command'] = command
+    message = "Please enter a number:"
     if update.callback_query:
-        await update.callback_query.message.reply_text("Please enter a number:")
+        await update.callback_query.message.reply_text(message)
         await update.callback_query.answer()
     else:
-        await update.message.reply_text("Please enter a number:")
+        await update.message.reply_text(message)
     return FIRST_NUMBER
 
 async def one_number_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         number = float(update.message.text)
         command = context.user_data.get('command')
-        if command == 'square':
-            await update.message.reply_text(f"{number}² = {number * number}")
-        elif command == 'sin':
-            await update.message.reply_text(f"sin({number}) = {math.sin(number):.6f}")
-        elif command == 'cos':
-            await update.message.reply_text(f"cos({number}) = {math.cos(number):.6f}")
-        elif command == 'tan':
-            try:
-                result = math.tan(number)
-                await update.message.reply_text(f"tan({number}) = {result:.6f}")
-            except ValueError:
-                await update.message.reply_text("Error: Invalid input for tangent")
-        elif command == 'sqrt':
-            if number < 0:
-                await update.message.reply_text("Cannot take square root of a negative number.")
-            else:
-                await update.message.reply_text(f"√{number} = {math.sqrt(number):.6f}")
-        elif command == 'log':
-            if number <= 0:
-                await update.message.reply_text("Cannot take log of non-positive number.")
-            else:
-                await update.message.reply_text(f"ln({number}) = {math.log(number):.6f}")
-        elif command == 'abs':
-            await update.message.reply_text(f"|{number}| = {abs(number)}")
-        elif command == 'round':
-            await update.message.reply_text(f"round({number}) = {round(number)}")
+        result = handle_one_number_operation(command, number)
+        await update.message.reply_text(result)
         return ConversationHandler.END
     except ValueError:
         await update.message.reply_text("Please enter a valid number.")
         return FIRST_NUMBER
 
-# Conversation handler for commands requiring two numbers
+# Perform the operation based on the command
+def handle_one_number_operation(command: str, number: float) -> str:
+    if command == 'square':
+        return f"{number}² = {number * number}"
+    elif command == 'sin':
+        return f"sin({number}) = {math.sin(number):.6f}"
+    elif command == 'cos':
+        return f"cos({number}) = {math.cos(number):.6f}"
+    elif command == 'tan':
+        try:
+            result = math.tan(number)
+            return f"tan({number}) = {result:.6f}"
+        except ValueError:
+            return "Error: Invalid input for tangent"
+    elif command == 'sqrt':
+        if number < 0:
+            return "Cannot take square root of a negative number."
+        return f"√{number} = {math.sqrt(number):.6f}"
+    elif command == 'log':
+        if number <= 0:
+            return "Cannot take log of non-positive number."
+        return f"ln({number}) = {math.log(number):.6f}"
+    elif command == 'abs':
+        return f"|{number}| = {abs(number)}"
+    elif command == 'round':
+        return f"round({number}) = {round(number)}"
+    return "Unknown command."
+
+# Generic function to handle two number operations
 async def two_number_entry(update: Update, context: ContextTypes.DEFAULT_TYPE, command: str):
     command_stats[command] += 1
     context.user_data['command'] = command
+    message = "Please enter the first number:"
     if update.callback_query:
-        await update.callback_query.message.reply_text("Please enter the first number:")
+        await update.callback_query.message.reply_text(message)
         await update.callback_query.answer()
     else:
-        await update.message.reply_text("Please enter the first number:")
+        await update.message.reply_text(message)
     return FIRST_NUMBER
 
 async def first_number_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -171,30 +173,34 @@ async def second_number_received(update: Update, context: ContextTypes.DEFAULT_T
         second_number = float(update.message.text)
         first_number = context.user_data.get('first_number')
         command = context.user_data.get('command')
-        if command == 'add':
-            await update.message.reply_text(f"{first_number} + {second_number} = {first_number + second_number}")
-        elif command == 'subtract':
-            await update.message.reply_text(f"{first_number} - {second_number} = {first_number - second_number}")
-        elif command == 'multiply':
-            await update.message.reply_text(f"{first_number} × {second_number} = {first_number * second_number}")
-        elif command == 'divide':
-            if second_number == 0:
-                await update.message.reply_text("Cannot divide by zero.")
-            else:
-                await update.message.reply_text(f"{first_number} ÷ {second_number} = {first_number / second_number}")
-        elif command == 'pow':
-            await update.message.reply_text(f"{first_number} ^ {second_number} = {math.pow(first_number, second_number):.6f}")
+        result = handle_two_number_operation(command, first_number, second_number)
+        await update.message.reply_text(result)
         return ConversationHandler.END
     except ValueError:
         await update.message.reply_text("Please enter a valid number.")
         return SECOND_NUMBER
+
+# Perform the operation based on the command
+def handle_two_number_operation(command: str, first_number: float, second_number: float) -> str:
+    if command == 'add':
+        return f"{first_number} + {second_number} = {first_number + second_number}"
+    elif command == 'subtract':
+        return f"{first_number} - {second_number} = {first_number - second_number}"
+    elif command == 'multiply':
+        return f"{first_number} × {second_number} = {first_number * second_number}"
+    elif command == 'divide':
+        if second_number == 0:
+            return "Cannot divide by zero."
+        return f"{first_number} ÷ {second_number} = {first_number / second_number}"
+    elif command == 'pow':
+        return f"{first_number} ^ {second_number} = {math.pow(first_number, second_number):.6f}"
+    return "Unknown command."
 
 # Callback query handler for inline buttons
 async def callback_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     callback_data = query.data
 
-    # Map callback_data to the corresponding command function or conversation entry
     callback_map = {
         'help_command': help_command,
         'stats': stats,
@@ -231,52 +237,29 @@ def main():
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Conversation handler for commands requiring one number
-    one_number_conv = ConversationHandler(
-        entry_points=[
-            CommandHandler('square', lambda u, c: one_number_entry(u, c, 'square')),
-            CommandHandler('sin', lambda u, c: one_number_entry(u, c, 'sin')),
-            CommandHandler('cos', lambda u, c: one_number_entry(u, c, 'cos')),
-            CommandHandler('tan', lambda u, c: one_number_entry(u, c, 'tan')),
-            CommandHandler('sqrt', lambda u, c: one_number_entry(u, c, 'sqrt')),
-            CommandHandler('log', lambda u, c: one_number_entry(u, c, 'log')),
-            CommandHandler('abs', lambda u, c: one_number_entry(u, c, 'abs')),
-            CommandHandler('round', lambda u, c: one_number_entry(u, c, 'round')),
-        ],
+    # Register conversation handlers
+    conversation_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start), CommandHandler("help", help_command)],
         states={
-            FIRST_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, one_number_received)],
+            FIRST_NUMBER: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, first_number_received),
+            ],
+            SECOND_NUMBER: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, second_number_received),
+            ],
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[CommandHandler("cancel", cancel)],
     )
 
-    # Conversation handler for commands requiring two numbers
-    two_number_conv = ConversationHandler(
-        entry_points=[
-            CommandHandler('add', lambda u, c: two_number_entry(u, c, 'add')),
-            CommandHandler('subtract', lambda u, c: two_number_entry(u, c, 'subtract')),
-            CommandHandler('multiply', lambda u, c: two_number_entry(u, c, 'multiply')),
-            CommandHandler('divide', lambda u, c: two_number_entry(u, c, 'divide')),
-            CommandHandler('pow', lambda u, c: two_number_entry(u, c, 'pow')),
-        ],
-        states={
-            FIRST_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, first_number_received)],
-            SECOND_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, second_number_received)],
-        },
-        fallbacks=[CommandHandler('cancel', cancel)],
-    )
-
-    # Add handlers
-    app.add_handler(one_number_conv)
-    app.add_handler(two_number_conv)
+    # Add command and callback query handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("stats", stats))
     app.add_handler(CallbackQueryHandler(callback_query_handler))
-    app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+    app.add_handler(conversation_handler)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, unknown_command))
 
-    print("MathMasterBot is running...")
+    # Start the bot
     app.run_polling()
 
-# Run the bot
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
