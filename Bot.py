@@ -208,7 +208,6 @@ class MathBot:
         await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
 
     def setup_handlers(self):
-    """Setup all command and conversation handlers"""
     math_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(self.math_operation, pattern='|'.join(COMMANDS.keys())),
