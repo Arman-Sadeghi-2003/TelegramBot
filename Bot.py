@@ -30,7 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ["/add", "/subtract"],
         ["/multiply", "/divide"],
         ["/sin", '/cos', '/tan'],
-        ["/square"]
+        ["/square"],
         ["/sqrt", "/pow"],
         ["/log", "/abs", "/round"],
         ["/stats"],
