@@ -43,11 +43,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👋 Hello {username}! I'm your friendly math assistant.\nAvailable commands:",
         reply_markup=reply_markup
     )
-    
+
 # Help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     command_stats['help'] += 1
-    await update.message.reply_text(
+    help_text = (
         "📚 MathMasterBot Commands:\n"
         "/start - Welcome message\n"
         "/add x y - Add two numbers\n"
@@ -65,149 +65,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/round x - Round to nearest integer\n"
         "/stats - Show command usage statistics"
     )
-
-# Add command
-async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['add'] += 1
-    is_valid, result = validate_args(context.args, 2)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /add 3 4")
-        return
-    x, y = result
-    await update.message.reply_text(f"{x} + {y} = {x + y}")
-
-# Subtract command
-async def subtract(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['subtract'] += 1
-    is_valid, result = validate_args(context.args, 2)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /subtract 10 3")
-        return
-    x, y = result
-    await update.message.reply_text(f"{x} - {y} = {x - y}")
-
-# Multiply command
-async def multiply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['multiply'] += 1
-    is_valid, result = validate_args(context.args, 2)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /multiply 2 5")
-        return
-    x, y = result
-    await update.message.reply_text(f"{x} × {y} = {x * y}")
-
-# Divide command
-async def divide(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['divide'] += 1
-    is_valid, result = validate_args(context.args, 2)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /divide 8 2")
-        return
-    x, y = result
-    if y == 0:
-        await update.message.reply_text("Cannot divide by zero.")
+    if update.callback_query:
+        # For callback queries, reply to the callback message
+        await update.callback_query.message.reply_text(help_text)
+        await update.callback_query.answer()  # Acknowledge the callback
     else:
-        await update.message.reply_text(f"{x} ÷ {y} = {x / y}")
-
-# Square command
-async def square(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['square'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /square 5")
-        return
-    x = result[0]
-    await update.message.reply_text(f"{x}² = {x * x}")
-
-# Sine command
-async def sin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['sin'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /sin 1.57")
-        return
-    x = result[0]
-    await update.message.reply_text(f"sin({x}) = {math.sin(x):.6f}")
-
-# Cosine command
-async def cos(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['cos'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /cos 1.57")
-        return
-    x = result[0]
-    await update.message.reply_text(f"cos({x}) = {math.cos(x):.6f}")
-
-# Tangent command
-async def tan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['tan'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /tan 0.785")
-        return
-    x = result[0]
-    try:
-        result = math.tan(x)
-        await update.message.reply_text(f"tan({x}) = {result:.6f}")
-    except ValueError:
-        await update.message.reply_text("Error: Invalid input for tangent")
-
-# Square root command
-async def sqrt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['sqrt'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /sqrt 16")
-        return
-    x = result[0]
-    if x < 0:
-        await update.message.reply_text("Cannot take square root of a negative number.")
-    else:
-        await update.message.reply_text(f"√{x} = {math.sqrt(x):.6f}")
-
-# Power command
-async def pow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['pow'] += 1
-    is_valid, result = validate_args(context.args, 2)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /pow 2 3")
-        return
-    x, y = result
-    await update.message.reply_text(f"{x} ^ {y} = {math.pow(x, y):.6f}")
-
-# Logarithm command
-async def log(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['log'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /log 2.718")
-        return
-    x = result[0]
-    if x <= 0:
-        await update.message.reply_text("Cannot take log of non-positive number.")
-    else:
-        await update.message.reply_text(f"ln({x}) = {math.log(x):.6f}")
-
-# Absolute value command
-async def abs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['abs'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /abs -5")
-        return
-    x = result[0]
-    await update.message.reply_text(f"|{x}| = {abs(x)}")
-
-# Round command
-async def round_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    command_stats['round'] += 1
-    is_valid, result = validate_args(context.args, 1)
-    if not is_valid:
-        await update.message.reply_text(f"Error: {result}\nUsage: /round 2.7")
-        return
-    x = result[0]
-    await update.message.reply_text(f"round({x}) = {round(x)}")
+        # For direct commands, reply to the message
+        await update.message.reply_text(help_text)
 
 # Stats command
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -215,45 +79,216 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     stats_message = "📊 Command Usage Statistics:\n"
     for cmd, count in command_stats.items():
         stats_message += f"/{cmd}: {count} times\n"
-    await update.message.reply_text(stats_message)
+    if update.callback_query:
+        await update.callback_query.message.reply_text(stats_message)
+        await update.callback_query.answer()
+    else:
+        await update.message.reply_text(stats_message)
 
-#<--------------------------------------------------------------->
-
-async def add_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Please send the first number:")
-    return FIRST_NUMBER
-
-async def add_first_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        context.user_data['first_number'] = float(update.message.text)
-        await update.message.reply_text("Now send the second number:")
-        return SECOND_NUMBER
-    except ValueError:
-        await update.message.reply_text("Please send a valid number:")
-        return FIRST_NUMBER
-
-async def add_second_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        second_number = float(update.message.text)
-        first_number = context.user_data.get('first_number')
-        result = first_number + second_number
-        await update.message.reply_text(f"{first_number} + {second_number} = {result}")
-    except ValueError:
-        await update.message.reply_text("Please send a valid number:")
-        return SECOND_NUMBER
-
-    return ConversationHandler.END
-
+# Cancel command
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('❌ Operation cancelled.')
-    return ConversationHandler.END
+    command_stats['cancel'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Operation canceled.")
+        await update.callback_query.answer()
+    else:
+        await update.message.reply_text("Operation canceled.")
 
-#<--------------------------------------------------------------->
+# Add command (and others requiring arguments)
+async def add(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['add'] += 1
+    if update.callback_query:
+        # For callback queries, prompt for input since no args are provided
+        await update.callback_query.message.reply_text("Please provide two numbers using /add x y (e.g., /add 3 4)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 2)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /add 3 4")
+            return
+        x, y = result
+        await update.message.reply_text(f"{x} + {y} = {x + y}")
 
-async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
+# Subtract command
+async def subtract(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['subtract'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide two numbers using /subtract x y (e.g., /subtract 10 3)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 2)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /subtract 10 3")
+            return
+        x, y = result
+        await update.message.reply_text(f"{x} - {y} = {x - y}")
 
+# Multiply command
+async def multiply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['multiply'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide two numbers using /multiply x y (e.g., /multiply 2 5)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 2)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /multiply 2 5")
+            return
+        x, y = result
+        await update.message.reply_text(f"{x} × {y} = {x * y}")
 
+# Divide command
+async def divide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['divide'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide two numbers using /divide x y (e.g., /divide 8 2)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 2)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /divide 8 2")
+            return
+        x, y = result
+        if y == 0:
+            await update.message.reply_text("Cannot divide by zero.")
+        else:
+            await update.message.reply_text(f"{x} ÷ {y} = {x / y}")
+
+# Square command
+async def square(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['square'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /square x (e.g., /square 5)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /square 5")
+            return
+        x = result[0]
+        await update.message.reply_text(f"{x}² = {x * x}")
+
+# Sine command
+async def sin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['sin'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /sin x (e.g., /sin 1.57)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /sin 1.57")
+            return
+        x = result[0]
+        await update.message.reply_text(f"sin({x}) = {math.sin(x):.6f}")
+
+# Cosine command
+async def cos(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['cos'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /cos x (e.g., /cos 1.57)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /cos 1.57")
+            return
+        x = result[0]
+        await update.message.reply_text(f"cos({x}) = {math.cos(x):.6f}")
+
+# Tangent command
+async def tan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['tan'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /tan x (e.g., /tan 0.785)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /tan 0.785")
+            return
+        x = result[0]
+        try:
+            result = math.tan(x)
+            await update.message.reply_text(f"tan({x}) = {result:.6f}")
+        except ValueError:
+            await update.message.reply_text("Error: Invalid input for tangent")
+
+# Square root command
+async def sqrt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['sqrt'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /sqrt x (e.g., /sqrt 16)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /sqrt 16")
+            return
+        x = result[0]
+        if x < 0:
+            await update.message.reply_text("Cannot take square root of a negative number.")
+        else:
+            await update.message.reply_text(f"√{x} = {math.sqrt(x):.6f}")
+
+# Power command
+async def pow_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['pow'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide two numbers using /pow x y (e.g., /pow 2 3)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 2)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /pow 2 3")
+            return
+        x, y = result
+        await update.message.reply_text(f"{x} ^ {y} = {math.pow(x, y):.6f}")
+
+# Logarithm command
+async def log(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['log'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /log x (e.g., /log 2.718)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /log 2.718")
+            return
+        x = result[0]
+        if x <= 0:
+            await update.message.reply_text("Cannot take log of non-positive number.")
+        else:
+            await update.message.reply_text(f"ln({x}) = {math.log(x):.6f}")
+
+# Absolute value command (fixed typo)
+async def abs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['abs'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /abs x (e.g., /abs -5)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /abs -5")
+            return
+        x = result[0]
+        await update.message.reply_text(f"|{x}| = {abs(x)}")
+
+# Round command (fixed typo)
+async def round_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command_stats['round'] += 1
+    if update.callback_query:
+        await update.callback_query.message.reply_text("Please provide a number using /round x (e.g., /round 2.7)")
+        await update.callback_query.answer()
+    else:
+        is_valid, result = validate_args(context.args, 1)
+        if not is_valid:
+            await update.message.reply_text(f"Error: {result}\nUsage: /round 2.7")
+            return
+        x = result[0]
+        await update.message.reply_text(f"round({x}) = {round(x)}")
 
 # Callback query handler for inline buttons
 async def callback_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -285,7 +320,10 @@ async def callback_query_handler(update: Update, context: ContextTypes.DEFAULT_T
         await callback_map[callback_data](update, context)
     else:
         await query.message.reply_text("Unknown action.")
-        query.answer()
+        await query.answer()
+
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
 
 # Main function to run the bot
 def main():
@@ -314,8 +352,6 @@ def main():
     app.add_handler(CommandHandler("round", round_command))
     app.add_handler(CallbackQueryHandler(callback_query_handler))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
-
-    
 
     print("MathMasterBot is running...")
     app.run_polling()
