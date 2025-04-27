@@ -25,18 +25,19 @@ def validate_args(args, expected_count):
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        ['/help'],
-        ["/add", "/subtract"],
-        ["/multiply", "/divide"],
-        ["/sin", '/cos', '/tan'],
-        ["/square"],
-        ["/sqrt", "/pow"],
-        ["/log", "/abs", "/round"],
-        ["/stats"],
-        ["/Cancel"]
+    keyboard = 
+    [
+        [InlineKeyboardButton("/help", callback_data='/help')],
+        [InlineKeyboardButton("/add", callback_data='/add'), InlineKeyboardButton("/subtract", callback_data='/subtract')],
+        [InlineKeyboardButton("/multiply", callback_data='/multiply'), InlineKeyboardButton("/divide", callback_data='/divide')],
+        [InlineKeyboardButton("/sin", callback_data='/sin'), InlineKeyboardButton("/cos", callback_data='/cos'), InlineKeyboardButton("/tan", callback_data='/tan')],
+        [InlineKeyboardButton("/square", callback_data='/square')],
+        [InlineKeyboardButton("/sqrt", callback_data='/sqrt'), InlineKeyboardButton("/pow", callback_data='/pow')],
+        [InlineKeyboardButton("/log", callback_data='/log'), InlineKeyboardButton("/abs", callback_data='/abs'), InlineKeyboardButton("/round", callback_data='/round')],
+        [InlineKeyboardButton("/stats", callback_data='/stats')],
+        [InlineKeyboardButton("/Cancel", callback_data='/Cancel')]
     ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    reply_markup = InlineKeyboardMarkup(keyboard)
     command_stats['start'] += 1
     username = update.effective_user.first_name or "there"
     await update.message.reply_text(
