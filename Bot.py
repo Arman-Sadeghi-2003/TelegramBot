@@ -208,29 +208,30 @@ class MathBot:
         await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
 
     def setup_handlers(self):
-        """Setup all command and conversation handlers"""
-        math_conv = ConversationHandler(
-            entry_points=[
-                CallbackQueryHandler(self.math_operation, pattern='|'.join(COMMANDS.keys())),
-                *[CommandHandler(cmd, lambda u, c, cmd=cmd: self.math_operation(
-                    Update(update.update_id, callback_query=update.callback_query or update.message, 
-                           message=update.message), c)) for cmd in COMMANDS.keys()]
-            ],
-            states={
-                NUMBER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.number_received)],
-            },
-            fallbacks=[CommandHandler('cancel', self.cancel)],
-        )
+    """Setup all command and conversation handlers"""
+    math_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(self.math_operation, pattern='|'.join(COMMANDS.keys())),
+            *[CommandHandler(cmd, lambda u, c, cmd=cmd: self.math_operation(
+                Update(update.update_id, callback_query=update.callback_query or update.message, 
+                       message=update.message), c)) for cmd in COMMANDS.keys()]
+        ],
+        states={
+            NUMBER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.number_received)],
+        },
+        fallbacks=[CommandHandler('cancel', self.cancel)],
+        per_callback_query=True  # Add this line to track callback queries
+    )
 
-        self.app.add_handler(math_conv)
-        self.app.add_handler(CommandHandler("start", self.start))
-        self.app.add_handler(CommandHandler("help", self.help))
-        self.app.add_handler(CommandHandler("stats", self.stats))
-        self.app.add_handler(CallbackQueryHandler(self.help, pattern='help'))
-        self.app.add_handler(CallbackQueryHandler(self.stats, pattern='stats'))
-        self.app.add_handler(CallbackQueryHandler(self.cancel, pattern='cancel'))
-        self.app.add_handler(MessageHandler(filters.COMMAND, self.unknown_command))
-
+    self.app.add_handler(math_conv)
+    self.app.add_handler(CommandHandler("start", self.start))
+    self.app.add_handler(CommandHandler("help", self.help))
+    self.app.add_handler(CommandHandler("stats", self.stats))
+    self.app.add_handler(CallbackQueryHandler(self.help, pattern='help'))
+    self.app.add_handler(CallbackQueryHandler(self.stats, pattern='stats'))
+    self.app.add_handler(CallbackQueryHandler(self.cancel, pattern='cancel'))
+    self.app.add_handler(MessageHandler(filters.COMMAND, self.unknown_command))
+    
     def run(self):
         """Run the bot"""
         if not BOT_TOKEN:
