@@ -25,8 +25,7 @@ def validate_args(args, expected_count):
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = 
-    [
+    keyboard = [
         [InlineKeyboardButton("/help", callback_data='/help')],
         [InlineKeyboardButton("/add", callback_data='/add'), InlineKeyboardButton("/subtract", callback_data='/subtract')],
         [InlineKeyboardButton("/multiply", callback_data='/multiply'), InlineKeyboardButton("/divide", callback_data='/divide')],
