@@ -197,61 +197,37 @@ class MathBot:
             result = await operation.execute(numbers)
             formatted_result = await operation.format_result(numbers, result)
             await update.message.reply_text(formatted_result)
+            context.user_data.clear()  # Reset user data after calculation
             return ConversationHandler.END
 
-        except ValueError as e:
-            error_message = str(e) if str(e) else "Please enter a valid number."
-            await update.message.reply_text(error_message)
+        except ValueError:
+            await update.message.reply_text("Invalid input, please enter a valid number.")
             return NUMBER_INPUT
 
-    async def unknown_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("❌ Unknown command. Try /help to see available commands.")
-
     def setup_handlers(self):
-        """Setup all command and conversation handlers"""
-        math_conv = ConversationHandler(
+        """Set up the command handlers"""
+        conv_handler = ConversationHandler(
             entry_points=[
-                CallbackQueryHandler(self.math_operation, pattern='|'.join(COMMANDS.keys())),
-                *[CommandHandler(cmd, lambda u, c, cmd=cmd: self.math_operation(
-                    Update(update.update_id, callback_query=update.callback_query or update.message, 
-                           message=update.message), c)) for cmd in COMMANDS.keys()]
+                CallbackQueryHandler(self.math_operation, pattern='^(add|subtract|multiply|divide|square|sqrt|log|sin|cos|tan|round|pow|abs)$'),
             ],
             states={
-                NUMBER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.number_received)],
+                NUMBER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.number_received)]
             },
-            fallbacks=[CommandHandler('cancel', self.cancel)],
-            per_callback_query=True  # Add this line to track callback queries
+            fallbacks=[CommandHandler('cancel', self.cancel)]
         )
-    
-        self.app.add_handler(math_conv)
+
+        self.app.add_handler(conv_handler)
         self.app.add_handler(CommandHandler("start", self.start))
         self.app.add_handler(CommandHandler("help", self.help))
         self.app.add_handler(CommandHandler("stats", self.stats))
-        self.app.add_handler(CallbackQueryHandler(self.help, pattern='help'))
-        self.app.add_handler(CallbackQueryHandler(self.stats, pattern='stats'))
-        self.app.add_handler(CallbackQueryHandler(self.cancel, pattern='cancel'))
-        self.app.add_handler(MessageHandler(filters.COMMAND, self.unknown_command))
-    
-        self.app.add_handler(math_conv)
-        self.app.add_handler(CommandHandler("start", self.start))
-        self.app.add_handler(CommandHandler("help", self.help))
-        self.app.add_handler(CommandHandler("stats", self.stats))
-        self.app.add_handler(CallbackQueryHandler(self.help, pattern='help'))
-        self.app.add_handler(CallbackQueryHandler(self.stats, pattern='stats'))
-        self.app.add_handler(CallbackQueryHandler(self.cancel, pattern='cancel'))
-        self.app.add_handler(MessageHandler(filters.COMMAND, self.unknown_command))
-        
+        self.app.add_handler(CallbackQueryHandler(self.cancel, pattern='^cancel$'))
+
+
     def run(self):
         """Run the bot"""
-        if not BOT_TOKEN:
-            print("Error: BOT_TOKEN not set")
-            return
-        print("MathMasterBot is running...")
         self.app.run_polling()
 
-def main():
-    bot = MathBot()
-    bot.run()
-
-if __name__ == "__main__":
-    main()
+# Start the bot
+if __name__ == '__main__':
+    math_bot = MathBot()
+    math_bot.run()
