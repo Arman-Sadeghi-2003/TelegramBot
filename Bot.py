@@ -61,12 +61,14 @@ class TwoNumberOperation(MathOperation):
         x, y = numbers
         if self.error_condition and self.error_condition(y):
             raise ValueError(self.error_message)
-        return self.func(x, y)
-
-    async def format_result(self, numbers, result):
-        if self.format_string:
-            return self.format_string.format(*numbers, result)
-        return super().format_result(numbers, result)
+        try:
+            return self.func(x, y)
+        except Exception as e:
+            raise ValueError(f"Error during calculation: {e}")
+        async def format_result(self, numbers, result):
+            if self.format_string:
+                return self.format_string.format(*numbers, result)
+            return super().format_result(numbers, result)
 
 # Command registry
 COMMANDS = {
@@ -90,7 +92,13 @@ COMMANDS = {
     'divide': TwoNumberOperation('divide', lambda x, y: x / y, 'Divide two numbers',
                                lambda y: y == 0, 'Cannot divide by zero',
                                format_string='{} ÷ {} = {}'),
-    'pow': TwoNumberOperation('pow', math.pow, 'x raised to the power y'),
+    'pow': TwoNumberOperation(
+        'pow',
+        math.pow,
+        'x raised to the power y',
+        error_condition=lambda y: False,  # You could define your own rules here
+        error_message='Invalid input for pow'
+    ),
 }
 
 class MathBot:
@@ -188,17 +196,21 @@ class MathBot:
             numbers = context.user_data.get('numbers', [])
             numbers.append(number)
             operation = COMMANDS[command]
-
+    
             if len(numbers) < operation.num_inputs:
                 await update.message.reply_text(f"Please enter the {'second' if len(numbers) == 1 else 'next'} number:")
                 context.user_data['numbers'] = numbers
                 return NUMBER_INPUT
-
+    
             result = await operation.execute(numbers)
             formatted_result = await operation.format_result(numbers, result)
             await update.message.reply_text(formatted_result)
-            context.user_data.clear()  # Reset user data after calculation
+            context.user_data.clear()
             return ConversationHandler.END
+    
+        except ValueError as e:
+            await update.message.reply_text(str(e))
+            return NUMBER_INPUT
 
         except ValueError:
             await update.message.reply_text("Invalid input, please enter a valid number.")
